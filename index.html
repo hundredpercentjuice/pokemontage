@@ -5,7 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Favorite Pokémon Cards</title>
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Alpine.js CDN -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-gray-100 p-6 font-sans">
@@ -22,8 +24,116 @@
     <div id="pokemon-list" class="space-y-4"></div>
     <div id="gallery-view" class="hidden mt-8 grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
   </div>
+
   <script>
-  // JavaScript content from canvas would be appended here
+    const apiBase = 'https://api.pokemontcg.io/v2/cards?q=name:';
+    const pokemon = [
+      "Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle", "Wartortle", "Blastoise", "Caterpie", "Metapod", "Butterfree", "Weedle", "Kakuna", "Beedrill", "Pidgey", "Pidgeotto", "Pidgeot", "Rattata", "Raticate", "Spearow", "Fearow", "Ekans", "Arbok", "Pikachu", "Raichu", "Sandshrew", "Sandslash", "Nidoran♀", "Nidorina", "Nidoqueen", "Nidoran♂", "Nidorino", "Nidoking", "Clefairy", "Clefable", "Vulpix", "Ninetales", "Jigglypuff", "Wigglytuff", "Zubat", "Golbat", "Oddish", "Gloom", "Vileplume", "Paras", "Parasect", "Venonat", "Venomoth", "Diglett", "Dugtrio", "Meowth", "Persian", "Psyduck", "Golduck", "Mankey", "Primeape", "Growlithe", "Arcanine", "Poliwag", "Poliwhirl", "Poliwrath", "Abra", "Kadabra", "Alakazam", "Machop", "Machoke", "Machamp", "Bellsprout", "Weepinbell", "Victreebel", "Tentacool", "Tentacruel", "Geodude", "Graveler", "Golem", "Ponyta", "Rapidash", "Slowpoke", "Slowbro", "Magnemite", "Magneton", "Farfetch’d", "Doduo", "Dodrio", "Seel", "Dewgong", "Grimer", "Muk", "Shellder", "Cloyster", "Gastly", "Haunter", "Gengar", "Onix", "Drowzee", "Hypno", "Krabby", "Kingler", "Voltorb", "Electrode", "Exeggcute", "Exeggutor", "Cubone", "Marowak", "Hitmonlee", "Hitmonchan", "Lickitung", "Koffing", "Weezing", "Rhyhorn", "Rhydon", "Chansey", "Tangela", "Kangaskhan", "Horsea", "Seadra", "Goldeen", "Seaking", "Staryu", "Starmie", "Mr. Mime", "Scyther", "Jynx", "Electabuzz", "Magmar", "Pinsir", "Tauros", "Magikarp", "Gyarados", "Lapras", "Ditto", "Eevee", "Vaporeon", "Jolteon", "Flareon", "Porygon", "Omanyte", "Omastar", "Kabuto", "Kabutops", "Aerodactyl", "Snorlax", "Articuno", "Zapdos", "Moltres", "Dratini", "Dragonair", "Dragonite", "Mewtwo", "Mew"
+    ];
+
+    const savedSelections = JSON.parse(localStorage.getItem("favorites")) || {};
+    const rejectedCards = JSON.parse(localStorage.getItem("rejected")) || {};
+
+    const createPokemonSection = (name) => {
+      const id = name.toLowerCase();
+      return `
+        <div x-data="{ open: false, selected: ${savedSelections[name] ? '`' + savedSelections[name] + '`' : 'null'}, rejected: ${JSON.stringify(rejectedCards[name] || [])} }" class="bg-white shadow rounded p-4">
+          <div class="flex items-center justify-between w-full">
+            <button @click="open = !open" class="text-xl font-semibold text-blue-600 hover:underline">
+              ${name}
+            </button>
+            <template x-if="selected && !open">
+              <img :src="selected" class="w-32 h-auto ml-4 rounded border cursor-pointer" @click="selected = null; open = true; save(null); updateProgress();" />
+            </template>
+          </div>
+          <div x-show="open" class="mt-4 space-y-2">
+            <template x-if="selected">
+              <div class="cursor-pointer" @click="selected = null; open = true; save(null); updateProgress();">
+                <img :src="selected" class="w-64 h-auto rounded border mx-auto" />
+              </div>
+            </template>
+            <template x-if="!selected">
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-4" x-init="fetch('${apiBase}${name}').then(res => res.json()).then(data => cards = data.data)" x-data="{ cards: [] }">
+                <template x-for="card in cards" :key="card.id">
+                  <img :src="card.images.small" class="w-full rounded cursor-pointer border hover:shadow-lg transition"
+                       :class="rejected.includes(card.id) ? 'opacity-20 grayscale' : ''"
+                       @click="if (!rejected.includes(card.id)) { selected = card.images.small; open = false; save(card.images.small); updateProgress(); }"
+                       @contextmenu.prevent="
+                         if (rejected.includes(card.id)) {
+                           rejected = rejected.filter(id => id !== card.id);
+                         } else {
+                           rejected.push(card.id);
+                         }
+                         saveRejection();
+                       " />
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+      `;
+    };
+
+    function saveSelection(pokemon, imageUrl) {
+      savedSelections[pokemon] = imageUrl;
+      localStorage.setItem("favorites", JSON.stringify(savedSelections));
+    }
+
+    function saveRejectionState(pokemon, ids) {
+      rejectedCards[pokemon] = ids;
+      localStorage.setItem("rejected", JSON.stringify(rejectedCards));
+    }
+
+    window.save = (imgUrl) => {
+      const container = event.currentTarget.closest('[x-data]');
+      const name = container.querySelector('button').innerText.trim();
+      saveSelection(name, imgUrl);
+    };
+
+    window.saveRejection = () => {
+      const container = event.currentTarget.closest('[x-data]');
+      const name = container.querySelector('button').innerText.trim();
+      const rejected = Alpine.evaluate(container, 'rejected');
+      saveRejectionState(name, rejected);
+    };
+
+    function updateProgress() {
+      const count = Object.keys(JSON.parse(localStorage.getItem("favorites") || '{}')).length;
+      document.getElementById("progress").innerText = `${count} / 151 selected`;
+    }
+
+    const container = document.getElementById("pokemon-list");
+    pokemon.forEach(p => {
+      container.insertAdjacentHTML("beforeend", createPokemonSection(p));
+    });
+
+    updateProgress();
+
+    document.getElementById("export-btn").addEventListener("click", () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedSelections, null, 2));
+      const dlAnchor = document.createElement('a');
+      dlAnchor.setAttribute("href", dataStr);
+      dlAnchor.setAttribute("download", "pokemon-favorites.json");
+      dlAnchor.click();
+    });
+
+    document.getElementById("reset-btn").addEventListener("click", () => {
+      localStorage.removeItem("favorites");
+      localStorage.removeItem("rejected");
+      location.reload();
+    });
+
+    document.getElementById("gallery-btn").addEventListener("click", () => {
+      const gallery = document.getElementById("gallery-view");
+      gallery.innerHTML = "";
+      Object.values(savedSelections).forEach(url => {
+        const img = document.createElement("img");
+        img.src = url;
+        img.className = "rounded border w-full";
+        gallery.appendChild(img);
+      });
+      gallery.classList.toggle("hidden");
+    });
   </script>
 </body>
 </html>
