@@ -9,9 +9,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Alpine.js CDN -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js" integrity="sha512-csNcFYJniKjJxRWRV1R7fvnXrycHP6qDR21mgz1ZP55xY5d+aHLfo9/FcGDQLfn2IfngbAHd8LdfsagcCqgTcQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body class="bg-gray-100 p-6 font-sans">
-  <div class="max-w-3xl mx-auto">
+  <div class="max-w-full mx-auto">
     <h1 class="text-3xl font-bold mb-2 text-center">Choose Your Favorite Pokémon Card</h1>
     <div class="flex justify-between items-center mb-4">
       <div id="progress" class="text-gray-700 font-medium">0 / 151 selected</div>
@@ -21,10 +23,14 @@
         <button id="gallery-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">Show Selected Only</button>
       </div>
     </div>
-    <div id="gallery-view" class="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
+    <div id="gallery-view" class="grid grid-cols-2 md:grid-cols-10 gap-4">
+
+
+    </div>
     <div id="pokemon-list" class="space-y-4"></div>
   </div>
-
+    
+  </template>
   <script>
     const apiBase = 'https://api.pokemontcg.io/v2/cards?q=name:';
     const pokemon = [
@@ -42,9 +48,6 @@
             <button @click="open = !open" class="text-xl font-semibold text-blue-600 hover:underline">
               ${name}
             </button>
-            <template x-if="selected && !open">
-              <img :src="selected" class="w-32 h-auto ml-4 rounded border cursor-pointer" @click="selected = null; open = true; save(null); updateProgress();" />
-            </template>
           </div>
           <div x-show="open" class="mt-4 space-y-2">
             <template x-if="selected">
@@ -57,7 +60,7 @@
                 <template x-for="card in cards" :key="card.id">
                   <img :src="card.images.small" class="w-full rounded cursor-pointer border hover:shadow-lg transition"
                        :class="rejected.includes(card.id) ? 'opacity-20 grayscale' : ''"
-                       @click="if (!rejected.includes(card.id)) { selected = card.images.small; open = false; saveSelection(card.name,card.images.small); updateProgress(); }"
+                       @click="if (!rejected.includes(card.id)) { selected = card.images.small; open = false; saveSelection('${name}',card); updateProgress(); }"
                        @contextmenu.prevent="
                          if (rejected.includes(card.id)) {
                            rejected = rejected.filter(id => id !== card.id);
@@ -75,8 +78,8 @@
     };
 
 
-    function saveSelection(pokemon, imageUrl) {
-      savedSelections[pokemon] = imageUrl;
+    function saveSelection(pokemon_name, poke_dictionary) {
+      savedSelections[pokemon_name] = poke_dictionary;
       localStorage.setItem("favorites", JSON.stringify(savedSelections));
     }
 
@@ -99,10 +102,11 @@
 
       const gallery = document.getElementById("gallery-view");
       gallery.innerHTML = "";
-      Object.values(savedSelections).forEach(url => {
+      Object.keys(savedSelections).forEach(card_name => {
+        card = savedSelections[card_name];
         const img = document.createElement("img");
-        img.src = url;
-        img.className = "rounded border w-full";
+        img.src = card.images.small;
+        img.className = "h-auto max-w-full rounded-lg";
         gallery.appendChild(img);
       });
     }
@@ -120,6 +124,21 @@
       dlAnchor.setAttribute("href", dataStr);
       dlAnchor.setAttribute("download", "pokemon-favorites.json");
       dlAnchor.click();
+      let zip = new JSZip();
+      /* we will be adding all of our files*/
+      let folder = zip.folder('collection');
+      Object.values(savedSelections).forEach(card => {
+
+        imageUrl = card.images.large;
+        const blob = fetch(imageUrl).then((res) => res.blob());
+        folder.file(`${card.name}.png`, blob, { binary: true });
+
+      });
+        /* Generate a zip file asynchronously and trigger the download */
+        zip.generateAsync({ type: "blob" }).then((blob) => {
+          saveAs(blob, "ZipFiles");
+      });      
+
     });
 
     document.getElementById("reset-btn").addEventListener("click", () => {
@@ -131,10 +150,11 @@
     document.getElementById("gallery-btn").addEventListener("click", () => {
       const gallery = document.getElementById("gallery-view");
       gallery.innerHTML = "";
-      Object.values(savedSelections).forEach(url => {
+      Object.keys(savedSelections).forEach(card_name => {
+        card = savedSelections[card_name];
         const img = document.createElement("img");
-        img.src = url;
-        img.className = "rounded border w-full";
+        img.src = card.images.small;
+        img.className = "h-auto max-w-full rounded-lg";
         gallery.appendChild(img);
       });
     });
