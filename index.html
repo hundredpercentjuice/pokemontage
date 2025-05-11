@@ -79,12 +79,6 @@
       localStorage.setItem("favorites", JSON.stringify(savedSelections));
     }
 
-    function saveRejectionState(pokemon, ids) {
-      rejectedCards[pokemon] = ids;
-      localStorage.setItem("rejected", JSON.stringify(rejectedCards));
-    }
-
-
     window.saveRejection = () => {
       const container = event.currentTarget.closest('[x-data]');
       const name = container.querySelector('button').innerText.trim();
@@ -150,8 +144,8 @@
     });
 
     document.getElementById("reset-btn").addEventListener("click", () => {
-      localStorage.removeItem("favorites");
-      localStorage.removeItem("rejected");
+      savedSelections = {};
+      localStorage.setItem("favorites", JSON.stringify(savedSelections));
       location.reload();
     });
 
