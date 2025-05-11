@@ -20,15 +20,38 @@
         <button id="reset-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow">Reset All</button>
       </div>
     </div>
-    <div id="gallery-view" class="grid grid-cols-2 md:grid-cols-10 gap-4">
-
-
+    
+    
+    <div x-data="globals">
+      <div id="gallery-view" class="grid grid-cols-2 md:grid-cols-10 gap-4"></div>  
+      <template x-for="pokemon_name in pokemon">
+        <div x-data="{  open: false, selected: savedSelections.hasOwnProperty(pokemon_name)  }" class="bg-white shadow rounded p-4" x-show="!selected">
+          <button @click="open = !open" class="text-xl font-semibold text-blue-600 hover:underline" x-text="pokemon_name"></button>
+          <div class="flex items-center justify-between w-full">
+              <template x-if="!selected && open">
+                <div class="grid sm:grid-cols-4 gap-4" x-init="fetch(build_url(pokemon_name)).then(res => res.json()).then(data => cards = data.data)" x-data="{ cards: [] }">
+                  <template x-for="card in cards" :key="card.id">
+                    <img :src="card.images.small" class="w-full rounded cursor-pointer border hover:shadow-lg transition"
+                         @click="selected = card.images.small; open = false; saveSelection(pokemon_name,card); updateProgress();" />
+                  </template>
+              </template>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
-    <div id="pokemon-list" class="space-y-4"></div>
+
   </div>
     
   </template>
   <script>
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('globals', () => ({
+        pokemon:[
+        "Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle", "Wartortle", "Blastoise", "Caterpie", "Metapod", "Butterfree", "Weedle", "Kakuna", "Beedrill", "Pidgey", "Pidgeotto", "Pidgeot", "Rattata", "Raticate", "Spearow", "Fearow", "Ekans", "Arbok", "Pikachu", "Raichu", "Sandshrew", "Sandslash", "nidoran ♂", "Nidorina", "Nidoqueen", "Nidoran ♂", "Nidorino", "Nidoking", "Clefairy", "Clefable", "Vulpix", "Ninetales", "Jigglypuff", "Wigglytuff", "Zubat", "Golbat", "Oddish", "Gloom", "Vileplume", "Paras", "Parasect", "Venonat", "Venomoth", "Diglett", "Dugtrio", "Meowth", "Persian", "Psyduck", "Golduck", "Mankey", "Primeape", "Growlithe", "Arcanine", "Poliwag", "Poliwhirl", "Poliwrath", "Abra", "Kadabra", "Alakazam", "Machop", "Machoke", "Machamp", "Bellsprout", "Weepinbell", "Victreebel", "Tentacool", "Tentacruel", "Geodude", "Graveler", "Golem", "Ponyta", "Rapidash", "Slowpoke", "Slowbro", "Magnemite", "Magneton", "Farfetch’d", "Doduo", "Dodrio", "Seel", "Dewgong", "Grimer", "Muk", "Shellder", "Cloyster", "Gastly", "Haunter", "Gengar", "Onix", "Drowzee", "Hypno", "Krabby", "Kingler", "Voltorb", "Electrode", "Exeggcute", "Exeggutor", "Cubone", "Marowak", "Hitmonlee", "Hitmonchan", "Lickitung", "Koffing", "Weezing", "Rhyhorn", "Rhydon", "Chansey", "Tangela", "Kangaskhan", "Horsea", "Seadra", "Goldeen", "Seaking", "Staryu", "Starmie", "Mr. Mime", "Scyther", "Jynx", "Electabuzz", "Magmar", "Pinsir", "Tauros", "Magikarp", "Gyarados", "Lapras", "Ditto", "Eevee", "Vaporeon", "Jolteon", "Flareon", "Porygon", "Omanyte", "Omastar", "Kabuto", "Kabutops", "Aerodactyl", "Snorlax", "Articuno", "Zapdos", "Moltres", "Dratini", "Dragonair", "Dragonite", "Mewtwo", "Mew"],
+      }));
+    });
+
     const apiBase = 'https://api.pokemontcg.io/v2/cards?q=name:';
     const pokemon = [
       "Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle", "Wartortle", "Blastoise", "Caterpie", "Metapod", "Butterfree", "Weedle", "Kakuna", "Beedrill", "Pidgey", "Pidgeotto", "Pidgeot", "Rattata", "Raticate", "Spearow", "Fearow", "Ekans", "Arbok", "Pikachu", "Raichu", "Sandshrew", "Sandslash", "nidoran ♂", "Nidorina", "Nidoqueen", "Nidoran ♂", "Nidorino", "Nidoking", "Clefairy", "Clefable", "Vulpix", "Ninetales", "Jigglypuff", "Wigglytuff", "Zubat", "Golbat", "Oddish", "Gloom", "Vileplume", "Paras", "Parasect", "Venonat", "Venomoth", "Diglett", "Dugtrio", "Meowth", "Persian", "Psyduck", "Golduck", "Mankey", "Primeape", "Growlithe", "Arcanine", "Poliwag", "Poliwhirl", "Poliwrath", "Abra", "Kadabra", "Alakazam", "Machop", "Machoke", "Machamp", "Bellsprout", "Weepinbell", "Victreebel", "Tentacool", "Tentacruel", "Geodude", "Graveler", "Golem", "Ponyta", "Rapidash", "Slowpoke", "Slowbro", "Magnemite", "Magneton", "Farfetch’d", "Doduo", "Dodrio", "Seel", "Dewgong", "Grimer", "Muk", "Shellder", "Cloyster", "Gastly", "Haunter", "Gengar", "Onix", "Drowzee", "Hypno", "Krabby", "Kingler", "Voltorb", "Electrode", "Exeggcute", "Exeggutor", "Cubone", "Marowak", "Hitmonlee", "Hitmonchan", "Lickitung", "Koffing", "Weezing", "Rhyhorn", "Rhydon", "Chansey", "Tangela", "Kangaskhan", "Horsea", "Seadra", "Goldeen", "Seaking", "Staryu", "Starmie", "Mr. Mime", "Scyther", "Jynx", "Electabuzz", "Magmar", "Pinsir", "Tauros", "Magikarp", "Gyarados", "Lapras", "Ditto", "Eevee", "Vaporeon", "Jolteon", "Flareon", "Porygon", "Omanyte", "Omastar", "Kabuto", "Kabutops", "Aerodactyl", "Snorlax", "Articuno", "Zapdos", "Moltres", "Dratini", "Dragonair", "Dragonite", "Mewtwo", "Mew"
@@ -36,49 +59,14 @@
 
     let savedSelections = JSON.parse(localStorage.getItem("favorites")) || {};
 
-    const createPokemonSection = (name) => {
-      const id = name.toLowerCase();
-      return `
-        <div x-data="{  open: false, selected: ${savedSelections[name] ? '`' + savedSelections[name] + '`' : 'null'} }" class="bg-white shadow rounded p-4" x-show="!selected">
-          <div class="flex items-center justify-between w-full">
-            <button @click="open = !open" class="text-xl font-semibold text-blue-600 hover:underline">
-              ${name}
-            </button>
-          </div>
-          <div x-show="open" class="mt-4 space-y-2">
-            <template x-if="!selected && open">
-              <div class="grid sm:grid-cols-4 gap-4" x-init="fetch('${apiBase}%22${name}%22').then(res => res.json()).then(data => cards = data.data)" x-data="{ cards: [] }">
-                <template x-for="card in cards" :key="card.id">
-                  <img :src="card.images.small" class="w-full rounded cursor-pointer border hover:shadow-lg transition"
-                       @click="selected = card.images.small; open = false; saveSelection('${name}',card); updateProgress();"
-                       @contextmenu.prevent="
-                         if (rejected.includes(card.id)) {
-                           rejected = rejected.filter(id => id !== card.id);
-                         } else {
-                           rejected.push(card.id);
-                         }
-                         saveRejection();
-                       " />
-                </template>
-              </div>
-            </template>
-          </div>
-        </div>
-      `;
-    };
-
+    function build_url(pokemon_name){
+      return `${apiBase}%22${pokemon_name}%22`;
+    }
 
     function saveSelection(pokemon_name, poke_dictionary) {
       savedSelections[pokemon_name] = poke_dictionary;
       localStorage.setItem("favorites", JSON.stringify(savedSelections));
     }
-
-    window.saveRejection = () => {
-      const container = event.currentTarget.closest('[x-data]');
-      const name = container.querySelector('button').innerText.trim();
-      const rejected = Alpine.evaluate(container, 'rejected');
-      saveRejectionState(name, rejected);
-    };
 
     function sortSaveSelection(){
       sortedList = {}
@@ -86,7 +74,7 @@
         if (savedSelections.hasOwnProperty(key)) {
           sortedList[key] = savedSelections[key];
         }
-    }
+      }
       savedSelections = sortedList;
     }
 
@@ -107,11 +95,6 @@
       scroll(0,0);
     }
 
-    const container = document.getElementById("pokemon-list");
-    pokemon.forEach(p => {
-      container.insertAdjacentHTML("beforeend", createPokemonSection(p));
-    });
-
     updateProgress();
 
     document.getElementById("export-btn").addEventListener("click", () => {
@@ -120,29 +103,24 @@
       dlAnchor.setAttribute("href", dataStr);
       dlAnchor.setAttribute("download", "pokemon-favorites.json");
       dlAnchor.click();
+
       let zip = new JSZip();
-      /* we will be adding all of our files*/
       let folder = zip.folder('collection');
       Object.values(savedSelections).forEach(card => {
-
         imageUrl = card.images.large;
         const blob = fetch(imageUrl).then((res) => res.blob());
         folder.file(`${card.name}.png`, blob, { binary: true });
-
       });
         /* Generate a zip file asynchronously and trigger the download */
         zip.generateAsync({ type: "blob" }).then((blob) => {
           saveAs(blob, "ZipFiles");
       });      
-
     });
-
     document.getElementById("reset-btn").addEventListener("click", () => {
       savedSelections = {};
       localStorage.setItem("favorites", JSON.stringify(savedSelections));
       location.reload();
     });
-
   </script>
 </body>
 </html>
