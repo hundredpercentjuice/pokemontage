@@ -18,7 +18,6 @@
       <div class="space-x-2">
         <button id="export-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">Export Picks</button>
         <button id="reset-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow">Reset All</button>
-        <button id="gallery-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">Show Selected Only</button>
       </div>
     </div>
     <div id="gallery-view" class="grid grid-cols-2 md:grid-cols-10 gap-4">
@@ -47,13 +46,8 @@
             </button>
           </div>
           <div x-show="open" class="mt-4 space-y-2">
-            <template x-if="selected">
-              <div class="cursor-pointer" @click="open = true;">
-                <img :src="selected" class="w-64 h-auto rounded border mx-auto" />
-              </div>
-            </template>
             <template x-if="!selected && open">
-              <div class="grid grid-cols-2 sm:grid-cols-3 gap-4" x-init="fetch('${apiBase}%22${name}%22').then(res => res.json()).then(data => cards = data.data)" x-data="{ cards: [] }">
+              <div class="grid sm:grid-cols-4 gap-4" x-init="fetch('${apiBase}%22${name}%22').then(res => res.json()).then(data => cards = data.data)" x-data="{ cards: [] }">
                 <template x-for="card in cards" :key="card.id">
                   <img :src="card.images.small" class="w-full rounded cursor-pointer border hover:shadow-lg transition"
                        @click="selected = card.images.small; open = false; saveSelection('${name}',card); updateProgress();"
@@ -149,17 +143,6 @@
       location.reload();
     });
 
-    document.getElementById("gallery-btn").addEventListener("click", () => {
-      const gallery = document.getElementById("gallery-view");
-      gallery.innerHTML = "";
-      Object.keys(savedSelections).forEach(card_name => {
-        card = savedSelections[card_name];
-        const img = document.createElement("img");
-        img.src = card.images.small;
-        img.className = "h-auto max-w-full rounded-lg";
-        gallery.appendChild(img);
-      });
-    });
   </script>
 </body>
 </html>
