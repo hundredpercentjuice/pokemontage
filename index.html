@@ -5,9 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Favorite Pokémon Cards</title>
-  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Alpine.js CDN -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js" integrity="sha512-csNcFYJniKjJxRWRV1R7fvnXrycHP6qDR21mgz1ZP55xY5d+aHLfo9/FcGDQLfn2IfngbAHd8LdfsagcCqgTcQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -34,16 +32,15 @@
   <script>
     const apiBase = 'https://api.pokemontcg.io/v2/cards?q=name:';
     const pokemon = [
-      "Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle", "Wartortle", "Blastoise", "Caterpie", "Metapod", "Butterfree", "Weedle", "Kakuna", "Beedrill", "Pidgey", "Pidgeotto", "Pidgeot", "Rattata", "Raticate", "Spearow", "Fearow", "Ekans", "Arbok", "Pikachu", "Raichu", "Sandshrew", "Sandslash", "Nidoran♀", "Nidorina", "Nidoqueen", "Nidoran♂", "Nidorino", "Nidoking", "Clefairy", "Clefable", "Vulpix", "Ninetales", "Jigglypuff", "Wigglytuff", "Zubat", "Golbat", "Oddish", "Gloom", "Vileplume", "Paras", "Parasect", "Venonat", "Venomoth", "Diglett", "Dugtrio", "Meowth", "Persian", "Psyduck", "Golduck", "Mankey", "Primeape", "Growlithe", "Arcanine", "Poliwag", "Poliwhirl", "Poliwrath", "Abra", "Kadabra", "Alakazam", "Machop", "Machoke", "Machamp", "Bellsprout", "Weepinbell", "Victreebel", "Tentacool", "Tentacruel", "Geodude", "Graveler", "Golem", "Ponyta", "Rapidash", "Slowpoke", "Slowbro", "Magnemite", "Magneton", "Farfetch’d", "Doduo", "Dodrio", "Seel", "Dewgong", "Grimer", "Muk", "Shellder", "Cloyster", "Gastly", "Haunter", "Gengar", "Onix", "Drowzee", "Hypno", "Krabby", "Kingler", "Voltorb", "Electrode", "Exeggcute", "Exeggutor", "Cubone", "Marowak", "Hitmonlee", "Hitmonchan", "Lickitung", "Koffing", "Weezing", "Rhyhorn", "Rhydon", "Chansey", "Tangela", "Kangaskhan", "Horsea", "Seadra", "Goldeen", "Seaking", "Staryu", "Starmie", "Mr. Mime", "Scyther", "Jynx", "Electabuzz", "Magmar", "Pinsir", "Tauros", "Magikarp", "Gyarados", "Lapras", "Ditto", "Eevee", "Vaporeon", "Jolteon", "Flareon", "Porygon", "Omanyte", "Omastar", "Kabuto", "Kabutops", "Aerodactyl", "Snorlax", "Articuno", "Zapdos", "Moltres", "Dratini", "Dragonair", "Dragonite", "Mewtwo", "Mew"
+      "Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle", "Wartortle", "Blastoise", "Caterpie", "Metapod", "Butterfree", "Weedle", "Kakuna", "Beedrill", "Pidgey", "Pidgeotto", "Pidgeot", "Rattata", "Raticate", "Spearow", "Fearow", "Ekans", "Arbok", "Pikachu", "Raichu", "Sandshrew", "Sandslash", "Nidoran-f", "Nidorina", "Nidoqueen", "Nidoran-m", "Nidorino", "Nidoking", "Clefairy", "Clefable", "Vulpix", "Ninetales", "Jigglypuff", "Wigglytuff", "Zubat", "Golbat", "Oddish", "Gloom", "Vileplume", "Paras", "Parasect", "Venonat", "Venomoth", "Diglett", "Dugtrio", "Meowth", "Persian", "Psyduck", "Golduck", "Mankey", "Primeape", "Growlithe", "Arcanine", "Poliwag", "Poliwhirl", "Poliwrath", "Abra", "Kadabra", "Alakazam", "Machop", "Machoke", "Machamp", "Bellsprout", "Weepinbell", "Victreebel", "Tentacool", "Tentacruel", "Geodude", "Graveler", "Golem", "Ponyta", "Rapidash", "Slowpoke", "Slowbro", "Magnemite", "Magneton", "Farfetch’d", "Doduo", "Dodrio", "Seel", "Dewgong", "Grimer", "Muk", "Shellder", "Cloyster", "Gastly", "Haunter", "Gengar", "Onix", "Drowzee", "Hypno", "Krabby", "Kingler", "Voltorb", "Electrode", "Exeggcute", "Exeggutor", "Cubone", "Marowak", "Hitmonlee", "Hitmonchan", "Lickitung", "Koffing", "Weezing", "Rhyhorn", "Rhydon", "Chansey", "Tangela", "Kangaskhan", "Horsea", "Seadra", "Goldeen", "Seaking", "Staryu", "Starmie", "Mr. Mime", "Scyther", "Jynx", "Electabuzz", "Magmar", "Pinsir", "Tauros", "Magikarp", "Gyarados", "Lapras", "Ditto", "Eevee", "Vaporeon", "Jolteon", "Flareon", "Porygon", "Omanyte", "Omastar", "Kabuto", "Kabutops", "Aerodactyl", "Snorlax", "Articuno", "Zapdos", "Moltres", "Dratini", "Dragonair", "Dragonite", "Mewtwo", "Mew"
     ];
 
-    const savedSelections = JSON.parse(localStorage.getItem("favorites")) || {};
-    const rejectedCards = JSON.parse(localStorage.getItem("rejected")) || {};
+    let savedSelections = JSON.parse(localStorage.getItem("favorites")) || {};
 
     const createPokemonSection = (name) => {
       const id = name.toLowerCase();
       return `
-        <div x-data="{  open: false, selected: ${savedSelections[name] ? '`' + savedSelections[name] + '`' : 'null'}, rejected: ${JSON.stringify(rejectedCards[name] || [])} }" class="bg-white shadow rounded p-4" x-show="!selected">
+        <div x-data="{  open: false, selected: ${savedSelections[name] ? '`' + savedSelections[name] + '`' : 'null'} }" class="bg-white shadow rounded p-4" x-show="!selected">
           <div class="flex items-center justify-between w-full">
             <button @click="open = !open" class="text-xl font-semibold text-blue-600 hover:underline">
               ${name}
@@ -59,8 +56,7 @@
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-4" x-init="fetch('${apiBase}${name}').then(res => res.json()).then(data => cards = data.data)" x-data="{ cards: [] }">
                 <template x-for="card in cards" :key="card.id">
                   <img :src="card.images.small" class="w-full rounded cursor-pointer border hover:shadow-lg transition"
-                       :class="rejected.includes(card.id) ? 'opacity-20 grayscale' : ''"
-                       @click="if (!rejected.includes(card.id)) { selected = card.images.small; open = false; saveSelection('${name}',card); updateProgress(); }"
+                       @click="selected = card.images.small; open = false; saveSelection('${name}',card); updateProgress();"
                        @contextmenu.prevent="
                          if (rejected.includes(card.id)) {
                            rejected = rejected.filter(id => id !== card.id);
@@ -96,7 +92,18 @@
       saveRejectionState(name, rejected);
     };
 
+    function sortSaveSelection(){
+      sortedList = {}
+      for (const key of pokemon) {
+        if (savedSelections.hasOwnProperty(key)) {
+          sortedList[key] = savedSelections[key];
+        }
+    }
+      savedSelections = sortedList;
+    }
+
     function updateProgress() {
+      sortSaveSelection();
       const count = Object.keys(JSON.parse(localStorage.getItem("favorites") || '{}')).length;
       document.getElementById("progress").innerText = `${count} / 151 selected`;
 
@@ -109,6 +116,7 @@
         img.className = "h-auto max-w-full rounded-lg";
         gallery.appendChild(img);
       });
+      scroll(0,0);
     }
 
     const container = document.getElementById("pokemon-list");
