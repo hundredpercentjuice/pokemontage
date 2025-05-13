@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Favorite Pokémon Cards</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js" integrity="sha512-csNcFYJniKjJxRWRV1R7fvnXrycHP6qDR21mgz1ZP55xY5d+aHLfo9/FcGDQLfn2IfngbAHd8LdfsagcCqgTcQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -14,113 +15,81 @@
   <div class="max-w-full mx-auto">
     <h1 class="text-3xl font-bold mb-2 text-center">Choose Your Favorite Pokémon Card</h1>
     <div class="flex justify-between items-center mb-4">
-      <div id="progress" class="text-gray-700 font-medium">0 / 151 selected</div>
+      <div x-data id="progress" class="text-gray-700 font-medium"><span x-text="Object.getOwnPropertyNames($store.persistance.savedSelections).length"></span> / 151 selected </div>
       <div class="space-x-2">
-        <button id="export-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">Export Picks</button>
-        <button id="reset-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow">Reset All</button>
+        <button x-data id="export-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow" @click="$store.persistance.exportCards()">Export Picks</button>
+        <button x-data id="reset-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow" @click="$store.persistance.clearSelections()">Reset All</button>
       </div>
     </div>
-    
-    
-    <div x-data="globals">
-      <div id="gallery-view" class="grid grid-cols-2 md:grid-cols-10 gap-4"></div>  
-      <template x-for="pokemon_name in pokemon">
-        <div x-data="{  open: false, selected: savedSelections.hasOwnProperty(pokemon_name)  }" class="bg-white shadow rounded p-4" x-show="!selected">
-          <button @click="open = !open" class="text-xl font-semibold text-blue-600 hover:underline" x-text="pokemon_name"></button>
-          <div class="flex items-center justify-between w-full">
-              <template x-if="!selected && open">
-                <div class="grid sm:grid-cols-4 gap-4" x-init="fetch(build_url(pokemon_name)).then(res => res.json()).then(data => cards = data.data)" x-data="{ cards: [] }">
-                  <template x-for="card in cards" :key="card.id">
-                    <img :src="card.images.small" class="w-full rounded cursor-pointer border hover:shadow-lg transition"
-                         @click="selected = card.images.small; open = false; saveSelection(pokemon_name,card); updateProgress();" />
-                  </template>
+    <div id="gallery-view" class="grid grid-cols-2 md:grid-cols-10 gap-4"></div>
+    <div class="grid grid-cols-2 md:grid-cols-10 gap-4">
+      <template x-data x-for="poke_details in $store.persistance.savedSelections" :key="poke_details.pk_id">
+        <img class="h-auto max-w-full rounded-lg" x-bind:src="poke_details.images.small">
+      </template>
+    </div>  
+
+    <template x-data x-for="pokemon_name in $store.persistance.all_pokemon">
+      <div x-data="{  open: false, selected: $store.persistance.savedSelections.hasOwnProperty(pokemon_name)  }" class="bg-white shadow rounded p-4" x-show="!selected">
+        <button @click="open = !open" class="text-xl font-semibold text-blue-600 hover:underline" x-text="pokemon_name"></button>
+        <div class="flex items-center justify-between w-full">
+          <template x-if="!selected && open">
+            <div class="grid sm:grid-cols-4 gap-4" x-init="fetch(build_url(pokemon_name)).then(res => res.json()).then(data => cards = data.data)" x-data="{ cards: [] }">
+              <template x-for="card in cards" :key="card.id">
+                <img x-data :src="card.images.small" class="w-full rounded cursor-pointer border hover:shadow-lg transition"
+                      @click="selected = card.images.small; open = false; $store.persistance.savedSelections[pokemon_name] = card; $store.persistance.sortSelected(); scroll(0,0)" />
               </template>
             </div>
-          </div>
+          </template>
         </div>
-      </template>
-    </div>
-
+      </div>
+    </template>
   </div>
-    
-  </template>
+
   <script>
     document.addEventListener('alpine:init', () => {
-      Alpine.data('globals', () => ({
-        pokemon:[
-        "Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle", "Wartortle", "Blastoise", "Caterpie", "Metapod", "Butterfree", "Weedle", "Kakuna", "Beedrill", "Pidgey", "Pidgeotto", "Pidgeot", "Rattata", "Raticate", "Spearow", "Fearow", "Ekans", "Arbok", "Pikachu", "Raichu", "Sandshrew", "Sandslash", "nidoran ♂", "Nidorina", "Nidoqueen", "Nidoran ♂", "Nidorino", "Nidoking", "Clefairy", "Clefable", "Vulpix", "Ninetales", "Jigglypuff", "Wigglytuff", "Zubat", "Golbat", "Oddish", "Gloom", "Vileplume", "Paras", "Parasect", "Venonat", "Venomoth", "Diglett", "Dugtrio", "Meowth", "Persian", "Psyduck", "Golduck", "Mankey", "Primeape", "Growlithe", "Arcanine", "Poliwag", "Poliwhirl", "Poliwrath", "Abra", "Kadabra", "Alakazam", "Machop", "Machoke", "Machamp", "Bellsprout", "Weepinbell", "Victreebel", "Tentacool", "Tentacruel", "Geodude", "Graveler", "Golem", "Ponyta", "Rapidash", "Slowpoke", "Slowbro", "Magnemite", "Magneton", "Farfetch’d", "Doduo", "Dodrio", "Seel", "Dewgong", "Grimer", "Muk", "Shellder", "Cloyster", "Gastly", "Haunter", "Gengar", "Onix", "Drowzee", "Hypno", "Krabby", "Kingler", "Voltorb", "Electrode", "Exeggcute", "Exeggutor", "Cubone", "Marowak", "Hitmonlee", "Hitmonchan", "Lickitung", "Koffing", "Weezing", "Rhyhorn", "Rhydon", "Chansey", "Tangela", "Kangaskhan", "Horsea", "Seadra", "Goldeen", "Seaking", "Staryu", "Starmie", "Mr. Mime", "Scyther", "Jynx", "Electabuzz", "Magmar", "Pinsir", "Tauros", "Magikarp", "Gyarados", "Lapras", "Ditto", "Eevee", "Vaporeon", "Jolteon", "Flareon", "Porygon", "Omanyte", "Omastar", "Kabuto", "Kabutops", "Aerodactyl", "Snorlax", "Articuno", "Zapdos", "Moltres", "Dratini", "Dragonair", "Dragonite", "Mewtwo", "Mew"],
-      }));
+      Alpine.store('persistance',{
+        all_pokemon: ["Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle", "Wartortle", "Blastoise", "Caterpie", "Metapod", "Butterfree", "Weedle", "Kakuna", "Beedrill", "Pidgey", "Pidgeotto", "Pidgeot", "Rattata", "Raticate", "Spearow", "Fearow", "Ekans", "Arbok", "Pikachu", "Raichu", "Sandshrew", "Sandslash", "nidoran ♂", "Nidorina", "Nidoqueen", "Nidoran ♂", "Nidorino", "Nidoking", "Clefairy", "Clefable", "Vulpix", "Ninetales", "Jigglypuff", "Wigglytuff", "Zubat", "Golbat", "Oddish", "Gloom", "Vileplume", "Paras", "Parasect", "Venonat", "Venomoth", "Diglett", "Dugtrio", "Meowth", "Persian", "Psyduck", "Golduck", "Mankey", "Primeape", "Growlithe", "Arcanine", "Poliwag", "Poliwhirl", "Poliwrath", "Abra", "Kadabra", "Alakazam", "Machop", "Machoke", "Machamp", "Bellsprout", "Weepinbell", "Victreebel", "Tentacool", "Tentacruel", "Geodude", "Graveler", "Golem", "Ponyta", "Rapidash", "Slowpoke", "Slowbro", "Magnemite", "Magneton", "Farfetch’d", "Doduo", "Dodrio", "Seel", "Dewgong", "Grimer", "Muk", "Shellder", "Cloyster", "Gastly", "Haunter", "Gengar", "Onix", "Drowzee", "Hypno", "Krabby", "Kingler", "Voltorb", "Electrode", "Exeggcute", "Exeggutor", "Cubone", "Marowak", "Hitmonlee", "Hitmonchan", "Lickitung", "Koffing", "Weezing", "Rhyhorn", "Rhydon", "Chansey", "Tangela", "Kangaskhan", "Horsea", "Seadra", "Goldeen", "Seaking", "Staryu", "Starmie", "Mr. Mime", "Scyther", "Jynx", "Electabuzz", "Magmar", "Pinsir", "Tauros", "Magikarp", "Gyarados", "Lapras", "Ditto", "Eevee", "Vaporeon", "Jolteon", "Flareon", "Porygon", "Omanyte", "Omastar", "Kabuto", "Kabutops", "Aerodactyl", "Snorlax", "Articuno", "Zapdos", "Moltres", "Dratini", "Dragonair", "Dragonite", "Mewtwo", "Mew"],
+        savedSelections:Alpine.$persist({}).as("savedSelections"),
+        sortSelected(){      
+          sortedList = {};
+          pk_id = 0;
+          for (const key of this.all_pokemon) {
+            pk_id=pk_id+1;
+            if (this.savedSelections.hasOwnProperty(key)) {
+              sortedList[key] = this.savedSelections[key];
+              sortedList[key].pk_id = pk_id;
+            }
+          }
+          this.savedSelections = sortedList;},
+        exportCards(){
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.savedSelections, null, 2));
+          const dlAnchor = document.createElement('a');
+          dlAnchor.setAttribute("href", dataStr);
+          dlAnchor.setAttribute("download", "pokemon-favorites.json");
+          dlAnchor.click();
+
+          let zip = new JSZip();
+          let folder = zip.folder('collection');
+          Object.values(this.savedSelections).forEach(card => {
+            const blob = fetch(card.images.large).then((res) => res.blob());
+            folder.file(`${card.name}.png`, blob, { binary: true });
+          });
+            /* Generate a zip file asynchronously and trigger the download */
+            zip.generateAsync({ type: "blob" }).then((blob) => {
+              saveAs(blob, "ZipFiles");
+          });      
+        },
+        clearSelections(){
+          this.savedSelections = {};
+          location.reload();
+        }
+        });
     });
-
-    const apiBase = 'https://api.pokemontcg.io/v2/cards?q=name:';
-    const pokemon = [
-      "Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle", "Wartortle", "Blastoise", "Caterpie", "Metapod", "Butterfree", "Weedle", "Kakuna", "Beedrill", "Pidgey", "Pidgeotto", "Pidgeot", "Rattata", "Raticate", "Spearow", "Fearow", "Ekans", "Arbok", "Pikachu", "Raichu", "Sandshrew", "Sandslash", "nidoran ♂", "Nidorina", "Nidoqueen", "Nidoran ♂", "Nidorino", "Nidoking", "Clefairy", "Clefable", "Vulpix", "Ninetales", "Jigglypuff", "Wigglytuff", "Zubat", "Golbat", "Oddish", "Gloom", "Vileplume", "Paras", "Parasect", "Venonat", "Venomoth", "Diglett", "Dugtrio", "Meowth", "Persian", "Psyduck", "Golduck", "Mankey", "Primeape", "Growlithe", "Arcanine", "Poliwag", "Poliwhirl", "Poliwrath", "Abra", "Kadabra", "Alakazam", "Machop", "Machoke", "Machamp", "Bellsprout", "Weepinbell", "Victreebel", "Tentacool", "Tentacruel", "Geodude", "Graveler", "Golem", "Ponyta", "Rapidash", "Slowpoke", "Slowbro", "Magnemite", "Magneton", "Farfetch’d", "Doduo", "Dodrio", "Seel", "Dewgong", "Grimer", "Muk", "Shellder", "Cloyster", "Gastly", "Haunter", "Gengar", "Onix", "Drowzee", "Hypno", "Krabby", "Kingler", "Voltorb", "Electrode", "Exeggcute", "Exeggutor", "Cubone", "Marowak", "Hitmonlee", "Hitmonchan", "Lickitung", "Koffing", "Weezing", "Rhyhorn", "Rhydon", "Chansey", "Tangela", "Kangaskhan", "Horsea", "Seadra", "Goldeen", "Seaking", "Staryu", "Starmie", "Mr. Mime", "Scyther", "Jynx", "Electabuzz", "Magmar", "Pinsir", "Tauros", "Magikarp", "Gyarados", "Lapras", "Ditto", "Eevee", "Vaporeon", "Jolteon", "Flareon", "Porygon", "Omanyte", "Omastar", "Kabuto", "Kabutops", "Aerodactyl", "Snorlax", "Articuno", "Zapdos", "Moltres", "Dratini", "Dragonair", "Dragonite", "Mewtwo", "Mew"
-    ];
-
-    let savedSelections = JSON.parse(localStorage.getItem("favorites")) || {};
 
     function build_url(pokemon_name){
+      const apiBase = 'https://api.pokemontcg.io/v2/cards?q=name:';
       return `${apiBase}%22${pokemon_name}%22`;
     }
-
-    function saveSelection(pokemon_name, poke_dictionary) {
-      savedSelections[pokemon_name] = poke_dictionary;
-      localStorage.setItem("favorites", JSON.stringify(savedSelections));
-    }
-
-    function sortSaveSelection(){
-      sortedList = {}
-      for (const key of pokemon) {
-        if (savedSelections.hasOwnProperty(key)) {
-          sortedList[key] = savedSelections[key];
-        }
-      }
-      savedSelections = sortedList;
-    }
-
-    function updateProgress() {
-      sortSaveSelection();
-      const count = Object.keys(JSON.parse(localStorage.getItem("favorites") || '{}')).length;
-      document.getElementById("progress").innerText = `${count} / 151 selected`;
-
-      const gallery = document.getElementById("gallery-view");
-      gallery.innerHTML = "";
-      Object.keys(savedSelections).forEach(card_name => {
-        card = savedSelections[card_name];
-        const img = document.createElement("img");
-        img.src = card.images.small;
-        img.className = "h-auto max-w-full rounded-lg";
-        gallery.appendChild(img);
-      });
-      scroll(0,0);
-    }
-
-    updateProgress();
-
-    document.getElementById("export-btn").addEventListener("click", () => {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedSelections, null, 2));
-      const dlAnchor = document.createElement('a');
-      dlAnchor.setAttribute("href", dataStr);
-      dlAnchor.setAttribute("download", "pokemon-favorites.json");
-      dlAnchor.click();
-
-      let zip = new JSZip();
-      let folder = zip.folder('collection');
-      Object.values(savedSelections).forEach(card => {
-        imageUrl = card.images.large;
-        const blob = fetch(imageUrl).then((res) => res.blob());
-        folder.file(`${card.name}.png`, blob, { binary: true });
-      });
-        /* Generate a zip file asynchronously and trigger the download */
-        zip.generateAsync({ type: "blob" }).then((blob) => {
-          saveAs(blob, "ZipFiles");
-      });      
-    });
-    document.getElementById("reset-btn").addEventListener("click", () => {
-      savedSelections = {};
-      localStorage.setItem("favorites", JSON.stringify(savedSelections));
-      location.reload();
-    });
   </script>
 </body>
 </html>
