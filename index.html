@@ -23,8 +23,8 @@
     </div>
     <div id="gallery-view" class="grid grid-cols-2 md:grid-cols-10 gap-4"></div>
     <div class="grid grid-cols-2 md:grid-cols-10 gap-4">
-      <template x-data x-for="poke_details in $store.persistance.savedSelections" :key="poke_details.pk_id">
-        <img class="h-auto max-w-full rounded-lg" x-bind:src="poke_details.images.small">
+      <template x-data x-for="[pokemon_name, poke_details] in Object.entries($store.persistance.savedSelections)">
+        <img class="h-auto max-w-full rounded-lg" x-bind:src="poke_details.images.small" @click="delete $store.persistance.savedSelections[pokemon_name]">
       </template>
     </div>  
 
