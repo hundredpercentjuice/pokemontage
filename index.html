@@ -25,12 +25,16 @@
         <button x-data id="reset-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow" @click="$store.persistance.clearSelections()">Reset All</button>
       </div>
     </div>
-    <div id="gallery-view" class="grid grid-cols-2 md:grid-cols-10 gap-4"></div>
-    <div class="grid grid-cols-2 md:grid-cols-10 gap-4">
-      <template x-data x-for="[pokemon_name, poke_details] in Object.entries($store.persistance.savedSelections)">
-        <img class="h-auto max-w-full rounded-lg" x-bind:src="poke_details.images.small" @click="delete $store.persistance.savedSelections[pokemon_name]">
-      </template>
-    </div>  
+      <div x-data="{gallery_open: false}" class="bg-gray-300 shadow rounded p-4">
+        <button @click="gallery_open = !gallery_open" class="text-xl font-semibold text-blue-600 hover:underline">Toggle Gallery</button>
+        <template x-if="gallery_open">
+          <div class="grid grid-cols-2 md:grid-cols-10 gap-4">
+            <template x-data x-for="[pokemon_name, poke_details] in Object.entries($store.persistance.savedSelections)">
+              <img class="h-auto max-w-full rounded-lg" x-bind:src="poke_details.images.small" @click="delete $store.persistance.savedSelections[pokemon_name]">
+            </template>
+          </div>
+        </template>  
+      </div>
 
     <template x-data x-for="pokemon_name in $store.persistance.all_pokemon">
       <div x-data="{  open: false, selected: $store.persistance.savedSelections.hasOwnProperty(pokemon_name)  }" class="bg-white shadow rounded p-4" x-show="!selected">
