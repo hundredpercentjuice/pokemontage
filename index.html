@@ -17,6 +17,10 @@
     <div class="flex justify-between items-center mb-4">
       <div x-data id="progress" class="text-gray-700 font-medium"><span x-text="Object.getOwnPropertyNames($store.persistance.savedSelections).length"></span> / 151 selected </div>
       <div class="space-x-2">
+        <label class="border-2 border-gray-200 p-3  block rounded cursor-pointer my-2" for="customFile" x-data="{ files: null }">
+          <input type="file" class="sr-only" id="customFile" x-on:change="$store.persistance.load_json">
+          <span>Load from Backup</span>
+        </label>
         <button x-data id="export-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow" @click="$store.persistance.exportCards()">Export Picks</button>
         <button x-data id="reset-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow" @click="$store.persistance.clearSelections()">Reset All</button>
       </div>
@@ -61,6 +65,18 @@
             }
           }
           this.savedSelections = sortedList;},
+        load_json(event){
+          const file = event.target.files[0];
+          const reader = new FileReader();
+          if (event.target.files.length < 1) {
+            return
+          }
+          reader.readAsText(file);
+          reader.onload = (event) => {
+            Alpine.store('persistance').savedSelections = JSON.parse(reader.result); 
+            location.reload();
+          };
+        },
         exportCards(){
           const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.savedSelections, null, 2));
           const dlAnchor = document.createElement('a');
