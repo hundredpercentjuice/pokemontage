@@ -44,7 +44,7 @@
             <div class="grid sm:grid-cols-4 gap-4" x-init="fetch(build_url(pokemon_name)).then(res => res.json()).then(data => cards = data.data)" x-data="{ cards: [] }">
               <template x-for="card in cards" :key="card.id">
                 <img x-data :src="card.images.small" class="w-full rounded cursor-pointer border hover:shadow-lg transition"
-                      @click="selected = card.images.small; open = false; $store.persistance.savedSelections[pokemon_name] = card; $store.persistance.sortSelected(); scroll(0,0)" />
+                      @click="selected = card.images.small; open = false; $store.persistance.addSelection(pokemon_name, card); $store.persistance.sortSelected(); scroll(0,0)" />
               </template>
             </div>
           </template>
@@ -102,7 +102,13 @@
         clearSelections(){
           this.savedSelections = {};
           location.reload();
-        }
+        },
+        addSelection(name, card){
+          let card_copy = {};
+          let attributes = ["names","id","types","images"];
+          attributes.forEach((attribute)=>card_copy[attribute] = card[attribute] );            
+          this.savedSelections[name] = card_copy;
+        },
         });
     });
 
